@@ -1,5 +1,5 @@
 {% extends "org/base_3col.html" %}
-{% load ldapauth %}
+{% load ldapauth i18n %}
 
 {% block title %}Imenik{% endblock %}
 
@@ -15,21 +15,44 @@
 
 {% block content-related-left %}
   <div>
-  <div class="module" id="recent-actions-module">
-  <h2 class="expand">Spreminjanje LDAP passworda</h2>
-  <div class="hideme">
-  {% ldap_password_change %}
-  </div>
-  </div>
-<div class="module" id="recent-actions-module">
-    <h2 class="expand">Moj Profil</h2>
-    <form method="POST" action="{{ request.path }}" enctype="multipart/form-data">
-    {{ profile_form.as_p }}
-    <input type="submit" value="Submit" />
-    </form>
+
+    <div class="module" id="new-member">
+      <h2 class="expand">Add new user</h2>
+
+	  {% if not newmemberform_show %}
+      <div class="hideme">
+      {% else %}
+      <div>
+      {% endif %}
+        {% if newmember_username %}
+          <div style="color:blue">User <strong>{{ newmember_username }}</strong> added.</div>
+        {% endif %}
+
+        <form method="POST" action="{{ request.path }}">
+          {{ newmemberform.as_p }}
+          <input type="submit" name="usersubmit" value="{% trans 'Add user' %}" />
+        </form>
+      </div>
+      
     </div>
+
+    <div class="module" id="recent-actions-module">
+      <h2 class="expand">Spreminjanje LDAP passworda</h2>
+      <div class="hideme">
+        {% ldap_password_change %}
+      </div>
+    </div>
+
+    <div class="module" id="recent-actions-module">
+      <h2 class="expand">Moj Profil</h2>
+      <form method="POST" action="{{ request.path }}" enctype="multipart/form-data">
+        {{ profile_form.as_p }}
+        <input type="submit" name="profilesubmit" value="{% trans 'Submit profile' %}"/>
+      </form>
+    </div>
+
   </div>
-{% endblock %}
+{% endblock content-related-left %}
 
 {% block content-main %}
         {% for profile in object_list %}
