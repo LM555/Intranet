@@ -44,7 +44,8 @@ LOCALE_INDEPENDENT_PATHS = (
 
 SITE_ID = 1
 
-# Make this unique, and don't share it with anybody.
+MEDIA_URL = '/smedia/'
+ADMIN_MEDIA_PREFIX = '/amedia/'
 MEDIA_ROOT = next_to_this_file(__file__, '../media')
 ADMIN_MEDIA_PREFIX = '/admin-media/'
 
@@ -58,15 +59,13 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.redirects.middleware.RedirectFallbackMiddleware',
     'intranet.middleware.exception.StandardExceptionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'localeurl.middleware.LocaleURLMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.doc.XViewMiddleware',
     'reversion.middleware.RevisionMiddleware',
-    #'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-    'intranet.middleware.FlatPage.FlatPage',
+    'intranet.middleware.FlatPage.FlatPage',  # uses 'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
     'intranet.middleware.NginxCache.NginxMemCacheMiddleWare',
     'django.middleware.csrf.CsrfResponseMiddleware',
 )
@@ -94,7 +93,7 @@ INSTALLED_APPS = (
     'django.contrib.markup',
     'django.contrib.redirects',
     'reversion',
-    'feedjack', # FIXME
+    'feedjack',  # FIXME
     'localeurl',
     'syncr.twitter',
     'tagging',

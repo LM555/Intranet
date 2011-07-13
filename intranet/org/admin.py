@@ -31,7 +31,7 @@ class EventAdmin(VersionAdmin):
     date_hierarchy = 'start_date'
     ordering = ['-start_date']
     list_filter = ['project', 'start_date']
-    list_display = ['title', 'start_date', 'length']
+    list_display = ['title', 'start_date', 'end_date']
 
     class Media:
         js = ('js/tags.js',)
@@ -69,7 +69,6 @@ admin.site.register(Phone)
 admin.site.register(Organization)
 admin.site.register(Role)
 admin.site.register(Shopping)
-admin.site.register(KbCategory)
 admin.site.register(IntranetImage)
 
 
