@@ -1,4 +1,5 @@
 from django.conf.urls.defaults import *
+from django.conf.urls.static import static
 from django.conf import settings
 from feedjack.models import Post
 
@@ -22,13 +23,13 @@ feeds = {
 
 
 js_info_dict = {
-    'packages': ('intranet.www', 'intranet.org', 'intranet.web', 'intranet.wiki'),
+    'packages': ('intranet.www', 'intranet.org'),
 }
 
 urlpatterns = patterns('',
     (r'^', include('intranet.www.urls')),
-    (r'^gallery/', include('pipa.gallery.urls')),
     (r'^intranet/', include('intranet.org.urls')),
+    (r'^gallery/', include('pipa.gallery.urls')),
     (r'^planet/', 'django.views.generic.list_detail.object_list', planet_dict),
 
     # keep this here as a way to force normalization of feeds
@@ -40,11 +41,8 @@ urlpatterns = patterns('',
     (r'^jsi18n/$', 'django.views.i18n.javascript_catalog', js_info_dict),
 
     (r'services/ltsp/', include('pipa.ltsp.urls')),
+    (r'^grappelli/', include('grappelli.urls')),
 )
 
 if settings.DEBUG:
-    from intranet.settings import next_to_this_file
-    urlpatterns += patterns('',
-        (r'^smedia/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
-        (r'^amedia/(?P<path>.*)$', 'django.views.static.serve', {'document_root':   next_to_this_file(__file__, '../admin-media')}),
-    )
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
