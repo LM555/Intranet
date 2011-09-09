@@ -9,7 +9,7 @@ Development setup
 
 Prerequisites::
 
-    sudo apt-get install git python2.7 libpq-dev libldap2-dev libsasl2-dev
+    sudo apt-get install git python2.7 python2.7-dev libpq-dev libldap2-dev libsasl2-dev
 
 Get Kiberpipa intranet::
 
@@ -71,7 +71,7 @@ To first time deploy intranet to hostname:
 
 ::
 
-    bin/fab staging_deploy -H hostname
+    bin/fab remote_staging_deploy -H HOSTNAME -u REMOTE_USER
 
 For staging to rebuild, you just need to update deploy branch and push::
 
@@ -85,4 +85,4 @@ Deploying from staging to production
 
 ::
 
-    bin/fab production_deploy -H hostname
+    bin/fab remote_production_deploy -H HOSTNAME -u REMOTE_USER
