@@ -111,14 +111,7 @@ class Place(models.Model):
         js = ('js/tags.js',)
 
 
-##there's gotta be a better way to do this
-class EmailBlacklist(models.Model):
-    blacklisted = models.EmailField(db_index=True, unique=True)
-
-    def __unicode__(self):
-        return self.email
-
-
+# subscriber emails, should be onetomany or smth
 class Email(models.Model):
     email = models.EmailField()
 
@@ -286,12 +279,9 @@ class Event(models.Model):
         """
         return self._next_previous_helper('previous')
 
-    def get_video_url(self):
+    def get_video_urls(self):
         from pipa.video.models import Video  # circular dependency
-        videos = Video.objects.filter(event=self)
-        if videos:
-            # TODO: chose best quality
-            return videos[0].play_url
+        return [vid.play_url for vid in Video.objects.filter(event=self)]
 
 
 class TipSodelovanja(models.Model):

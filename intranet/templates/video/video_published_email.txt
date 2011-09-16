@@ -1,0 +1,9 @@
+Pozdravljeni,
+
+Sporočamo Vam, da je video dogodka, ki smo ga posneli, na voljo za ogled.
+
+{% for e in events %}
+{{ e.title }} - {{ e.get_video_urls|join:", " }}
+{% endfor %}
+
+Ekipa Kiberpipe
