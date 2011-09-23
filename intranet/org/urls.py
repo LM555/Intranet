@@ -154,7 +154,7 @@ urlpatterns = patterns('',
     (r'^image_crop_tool/save/', 'intranet.org.views.image_save'),
     (r'^image_crop_tool/$', 'intranet.org.views.image_crop_tool'),
 
-    (r'^tehniki/$', 'intranet.org.views.tehniki'),
+    url(r'^tehniki/$', 'intranet.org.views.tehniki', name="technician_list"),
     (r'^tehniki/(?P<year>\d+)/(?P<month>[a-z]{3})/$', 'intranet.org.views.tehniki_monthly'),
     (r'^tehniki/(?P<year>\d+)/(?P<week>\d+)/$', 'intranet.org.views.tehniki'),
     (r'^tehniki/add/$', 'intranet.org.views.tehniki_add'),
@@ -188,7 +188,6 @@ urlpatterns = patterns('',
     (r'^feeds/(?P<url>.*)/$', 'django.contrib.syndication.views.feed', {'feed_dict': feeds}),
 
     #timelines
-    (r'^timelines/source.xml$', 'intranet.org.views.timeline_xml'),
     (r'^timelines/$', 'django.views.generic.simple.direct_to_template', {'template': 'org/timeline.html'}),
 )
 
