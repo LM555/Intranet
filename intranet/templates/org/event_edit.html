@@ -93,13 +93,15 @@ $(document).ready(function() {
     }
 
     function add_author(author, type) {
-        if (author.length==0)
+        author = $.trim(author);
+
+        if (author.length === 0)
             return;
 
         formatted = author + " - " + type;
         opt_exists = false;
         $('#authorsid > option').each(function() {
-            if ($(this).text() == formatted) {
+            if ($(this).text() === formatted) {
                 opt_exists = true;
                 return false;
             }
