@@ -2,8 +2,8 @@ import os
 import re
 
 
-def next_to_this_file(this_file, additional_path):
-    return os.path.join(os.path.dirname(os.path.abspath(this_file)), additional_path)
+def next_to_this_file(this_file, *additional_paths):
+    return os.path.join(os.path.dirname(os.path.abspath(this_file)), *additional_paths)
 
 
 ADMINS = (
@@ -39,6 +39,9 @@ LOCALE_INDEPENDENT_PATHS = (
     re.compile('event_photos/'),
     re.compile('^favicon.ico'),
     re.compile('^/services/'),
+)
+LOCALE_PATHS = (
+    next_to_this_file(__file__, 'intranet', 'locale')
 )
 
 SITE_ID = 1
@@ -191,18 +194,14 @@ EMAIL_SUBJECT_PREFIX = '[intranet] '
 SERVER_EMAIL = 'intranet@kiberpipa.org'
 APPEND_SLASH = True
 
+TEST_RUNNER = 'django_coverage.coverage_runner.CoverageRunner'
+
 # haystack
 HAYSTACK_SEARCH_ENGINE = 'solr'
 HAYSTACK_SITECONF = 'intranet.haystacksearch'
 
 # south
 SOUTH_TESTS_MIGRATE = False
-
-# django-jenkins
-PROJECT_APPS = (
-    "intranet.org",
-    "intranet.www",
-)
 
 # pipa.photo
 PHOTOS_FLICKR_IMAGE_URL_S = 'http://farm%(farm)s.static.flickr.com/%(server)s/%(id)s_%(secret)s_s.jpg'
