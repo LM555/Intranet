@@ -3,7 +3,6 @@
 
 import datetime
 import os
-import re
 import csv
 import shutil
 import random
@@ -24,7 +23,6 @@ from django.utils import simplejson
 from django.db import models
 from PIL import Image
 
-from pipa.video.utils import prepare_video_zip
 from intranet.org.models import (Project, Email,
     Event, Shopping, Person, Sodelovanje, TipSodelovanja, Diary,
     Lend, Scratchpad)
@@ -183,31 +181,6 @@ def index(request):
                               context_instance=RequestContext(request))
 
 
-@login_required
-def diarys_form(request, id=None, action=None):
-    if request.method == 'POST':
-        if id:
-            diary_form = DiaryForm(request.POST, instance=Diary.objects.get(id=id))
-        else:
-            diary_form = DiaryForm(request.POST)
-
-        if diary_form.is_valid():
-            diary = diary_form.save(commit=False)
-            diary.author = request.user
-            diary.save()
-            return HttpResponseRedirect(diary.get_absolute_url())
-    else:
-        if id:
-            diary_form = DiaryForm(instance=Diary.objects.get(id=id))
-        else:
-            diary_form = DiaryForm()
-
-    return render_to_response('org/diary.html', {
-        'diary_form': diary_form,
-        }, context_instance=RequestContext(request)
-    )
-
-
 def monthly_navigation(year=None, month=None):
     month_prev = month - 1
     month_next = month + 1
@@ -248,28 +221,6 @@ def weekly_navigation(year=None, week=None, week_start=None, week_end=None):
 
     return {'prev': '%s/%s' % (year_prev, week_prev),
             'next': '%s/%s' % (year_next, week_next)}
-
-
-@login_required
-def tehniki_add(request):
-    id = request.POST['uniqueSpot']
-    if not id:
-        return HttpResponseRedirect('../')
-
-    event = Event.objects.get(pk=id)
-
-    p = Diary(
-        date=event.start_date,
-        event=event,
-        author=request.user,
-        task=Project.objects.get(pk=23),
-        log_formal=request.POST['log_formal'],
-        log_informal=request.POST['log_informal'],
-        length=datetime.time(int(request.POST.get('length', 1)), 0),
-    )
-    p.save()
-
-    return HttpResponseRedirect('../')
 
 
 @login_required
@@ -551,17 +502,28 @@ def commit_hook(request):
     return HttpResponse('OK')
 
 
-# generic views
 
 
-class DetailLend(DetailView):
-    model = Lend
+# diary
 
-    def get_context_data(self, **kw):
-        context = super(DetailLend, self).get_context_data(**kw)
-        context['lend_form'] = LendForm(instance=self.model.objects.get(id=self.kwargs['pk']))
-        context['lend_edit'] = True
-        return context
+
+@login_required
+def diarys_form(request, id=None, action=None):
+    if id:
+        diary_form = DiaryForm(request.POST or None, instance=Diary.objects.get(id=id))
+    else:
+        diary_form = DiaryForm(request.POST or None)
+
+    if request.method == "POST" and diary_form.is_valid():
+        diary = diary_form.save(commit=False)
+        diary.author = request.user
+        diary.save()
+        return HttpResponseRedirect(diary.get_absolute_url())
+
+    return render_to_response(
+        'org/diary.html',
+        {'diary_form': diary_form},
+        context_instance=RequestContext(request))
 
 
 class DetailDiary(DetailView):
@@ -595,7 +557,7 @@ class ArchiveIndexDiary(ArchiveIndexView):
 
     def get_context_data(self, **kw):
         context = super(ArchiveIndexDiary, self).get_context_data(**kw)
-        context['diary_form'] = DiaryForm()
+        context['diary_form'] = DiaryForm(initial=self.request.GET.dict())
         context['filter'] = DiaryFilter(self.request.POST)
         return context
 
@@ -616,7 +578,7 @@ class MonthArchiveDiary(MixinArchiveDiary, MonthArchiveView):
     pass
 
 
-# event views
+# events
 
 
 @login_required
@@ -631,34 +593,6 @@ def add_event_emails(request, event_id):
                     event.emails.add(email)
         event.save()
     return HttpResponseRedirect(event.get_absolute_url())
-
-
-@login_required
-def info_txt(request, event):
-    event = get_object_or_404(Event, pk=event)
-    content = []
-    if event.sodelovanje_set.all():
-        content.append(u'author: %s' % u', '.join([s.person.name for s in event.sodelovanje_set.all()]))
-    content.append(u'title: %s' % event.title)
-    content.append(u'date: %s' % event.start_date.strftime('%d.%m.%Y'))
-    content.append(u'cat: %s' % event.project)
-    desc = event.announce
-    desc = re.sub('\s+', ' ', re.sub('<.*?>', '', desc))
-    content.append(u'desc: %s' % (desc,))
-    content.append(u'url: http://www.kiberpipa.org%s' % event.get_absolute_url())
-    content.append(u'intranet-id: %s' % event.id)
-    response = HttpResponse(mimetype='application/octet-stream')
-    response['Content-Disposition'] = "attachment; filename=info.txt"
-    content_str = u'\n'.join(content)
-    response.write(content_str.encode('utf-8'))
-    return response
-
-
-@login_required
-def sablona(request, event):
-    event = get_object_or_404(Event, pk=event)
-    person = u', '.join([i.person.name for i in event.sodelovanje_set.all() if i.tip.id in (1, 5)]),
-    return prepare_video_zip(event.slug, event.title, event.start_date, person)
 
 
 @login_required
@@ -716,6 +650,10 @@ def event_edit(request, event_pk=None):
         }
     return render_to_response('org/event_edit.html', RequestContext(request, context))
 
+@login_required
+def event_diary_edit(request, event_pk):
+    diary_id = Diary.objects.filter(event__id=event_pk).filter(author=request.user).all()[0].id
+    return DetailDiary.as_view()(request, pk=diary_id)
 
 @login_required
 def event_count(request, event_id=None):
@@ -768,11 +706,21 @@ def event_template(request, year=0, week=0):
 
 
 class MixinArchiveEvent(object):
-    queryset = Event.objects.select_related().prefetch_related('officers_on_duty', 'video', 'technician').order_by('start_date')
+    queryset = Event.objects.load_related_fields().order_by('start_date')
     date_field = 'start_date'
     allow_empty = True
     allow_future = True
     month_format = '%m'
+
+    def get_context_data(self, **kw):
+        context = super(MixinArchiveEvent, self).get_context_data(**kw)
+
+        my_diaries = {}
+        for diary in Diary.objects.filter(event__in=context['object_list']).filter(author__exact=self.request.user).all():
+            my_diaries[diary.event.id] = diary
+        context['my_diaries'] = my_diaries
+        # TODO: cannot access dictionary by variable in templates
+        return context
 
 
 class YearArchiveEvent(MixinArchiveEvent, YearArchiveView):
@@ -797,15 +745,17 @@ class ArchiveIndexEvent(ArchiveIndexView):
         today = datetime.datetime.today()
         week_number = int(today.strftime('%W'))
         context['events'] = [
-            [u'Prejšni teden', Event.objects.get_week_events(today.year, week_number - 1)],
-            [u'Trenutni teden', Event.objects.get_week_events(today.year, week_number)],
-            [u'Naslednji teden', Event.objects.get_week_events(today.year, week_number + 1)],
-            [u'Čez dva tedna', Event.objects.get_week_events(today.year, week_number + 2)],
+            [u'Prejšni teden', Event.objects.get_week_events(today.year, week_number - 1).load_related_fields()],
+            [u'Trenutni teden', Event.objects.get_week_events(today.year, week_number).load_related_fields()],
+            [u'Naslednji teden', Event.objects.get_week_events(today.year, week_number + 1).load_related_fields()],
+            [u'Čez dva tedna', Event.objects.get_week_events(today.year, week_number + 2).load_related_fields()],
         ]
         return context
 
 
-# shopping views
+# shopping
+
+
 class MixinShopping(object):
     model = Shopping
     form_class = ShoppingForm
@@ -892,11 +842,18 @@ class UpdateLend(MixinLend, UpdateView):
     template_name = "org/lend_detail.html"
 
 
-# this shouldn't be doable with get, make a form
+class DetailLend(DetailView):
+    model = Lend
+
+    def get_context_data(self, **kw):
+        context = super(DetailLend, self).get_context_data(**kw)
+        context['lend_form'] = LendForm(instance=self.model.objects.get(id=self.kwargs['pk']))
+        context['lend_edit'] = True
+        return context
 
 
 @login_required
-def lend_back(request, id=None):
+def lend_back(request, id=None):  # TODO: this shouldn't be doable with get, make a form
     lend = get_object_or_404(Lend, pk=id)
     if not lend.note:
         lend.note = ""

@@ -104,7 +104,7 @@ class DateTimeWidget(forms.widgets.TextInput):
         for fmt in [self.format] + list(get_format('DATETIME_INPUT_FORMATS')):
             try:
                 return datetime.datetime.strptime(value, fmt)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
 
@@ -242,4 +242,3 @@ class DiaryForm(forms.ModelForm):
         self.base_fields['date'].initial = date.today()
         super(DiaryForm, self).__init__(*a, **kw)
         self.fields['task'].queryset = Project.objects.all().order_by('name')
-        self.fields['event'].queryset = Event.objects.get_date_events(datetime.datetime.now() + datetime.timedelta(days=-21), datetime.datetime.now())
